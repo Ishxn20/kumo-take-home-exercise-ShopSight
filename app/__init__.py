@@ -1,0 +1,1 @@
+"""ShopSight prototype application package."""

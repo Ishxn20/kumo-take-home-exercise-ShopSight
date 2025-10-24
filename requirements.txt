@@ -1,0 +1,8 @@
+streamlit>=1.39
+pandas>=2.0
+numpy>=1.24
+plotly>=5.20
+altair>=5.0
+openai>=1.6
+python-dateutil>=2.8
+pytest>=7.4
