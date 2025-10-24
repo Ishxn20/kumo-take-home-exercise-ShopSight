@@ -1,0 +1,1 @@
+# kumo-take-home-exercise-ShopSight
