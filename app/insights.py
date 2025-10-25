@@ -104,22 +104,22 @@ def build_mock_additional_insights(
         {
             "title": "Cross-Sell Opportunity",
             "body": (
-                f"Bundle {product_name} with complementary accessories to grow average order value. "
-                "Customers respond well to curated looks that save them time."
+                f"Merchandising teams can bundle {product_name} with complementary accessories to grow average order value. "
+                "Position curated looks on product detail pages and at checkout to save shoppers time."
             ),
         },
         {
             "title": "Inventory Planning",
             "body": (
-                "Maintain two weeks of forward cover in regional hubs to stay ahead of demand spikes. "
-                "Leverage store transfer programs before triggering new buys."
+                "Supply planners should maintain roughly two weeks of forward cover in regional hubs to stay ahead of demand spikes. "
+                "Prioritise store-to-store transfers before triggering new buys to protect margin."
             ),
         },
         {
             "title": "Marketing Insight",
             "body": (
-                "Re-engage lapsed purchasers with a limited-time offer and creative refresh. "
-                "Highlight comfort and versatility across channels."
+                "Growth marketing can re-engage lapsed purchasers with a limited-time offer and refreshed creative. "
+                "Highlight comfort and versatility across channels to reinforce value."
             ),
         },
     ]

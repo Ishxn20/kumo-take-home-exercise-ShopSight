@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import sqlite3
 from functools import lru_cache
-from pathlib import Path
 from typing import Dict, List, Optional
 
 import pandas as pd
 
-ROOT_DIR = Path(__file__).resolve().parents[1]
-DB_PATH = ROOT_DIR / "data" / "shopsight.db"
+from config import DB_PATH
 
 
 class DataSourceError(RuntimeError):

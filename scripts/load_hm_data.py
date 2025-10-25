@@ -20,13 +20,15 @@ import pandas as pd
 import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 
-ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = ROOT / "data"
-DB_PATH = DATA_DIR / "shopsight.db"
-ARTICLES_PATH = DATA_DIR / "articles.parquet"
-TRANSACTIONS_DIR = DATA_DIR / "transactions"
+import sys
 
-DEFAULT_TOP_N_ARTICLES = 60
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))
+
+from config import ARTICLES_PATH, DB_PATH, TOP_N_ARTICLES, TRANSACTIONS_DIR
+
+DEFAULT_TOP_N_ARTICLES = TOP_N_ARTICLES
 
 CHANNEL_MAP = {1: "Online", 2: "Retail Store"}
 REGIONS = ["US-West", "US-East", "US-South", "US-Midwest", "Canada", "Europe"]

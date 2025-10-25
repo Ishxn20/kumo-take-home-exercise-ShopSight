@@ -10,6 +10,7 @@ import streamlit as st
 if __package__ is None:  # Allow `streamlit run app/streamlit_app.py`
     sys.path.append(str(Path(__file__).resolve().parents[1]))
 
+from config import CHAT_HISTORY_LIMIT, FEEDBACK_EMAIL, HELP_URL, SEARCH_PLACEHOLDER
 from app.data_loader import (  # noqa: E402
     filter_transactions_by_product,
     get_product_details,
@@ -42,7 +43,7 @@ def _prepare_product_selection() -> str:
         query = st.text_input(
             "Search by name or ID",
             value="",
-            placeholder="e.g. Jade denim, 706016001",
+            placeholder=SEARCH_PLACEHOLDER,
         )
         matches = search_products(query, limit=6)
 
@@ -156,7 +157,9 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
         menu_items={
-            "Report a bug": "mailto:demo-feedback@example.com",
+            "Get Help": HELP_URL,
+            "Report a bug": f"mailto:{FEEDBACK_EMAIL}",
+            "About": "ShopSight prototype — use Settings → Theme to toggle between light and dark.",
         },
     )
     st.markdown(
@@ -210,75 +213,87 @@ def main() -> None:
         f"Sales observed between {product['first_sale']} and {product['last_sale']}."
     )
 
-    _render_kpis(metrics)
+    chat_state_key = f"chat_history_{product_id}"
+    if chat_state_key not in st.session_state:
+        st.session_state[chat_state_key] = []
 
-    st.markdown("### Sales Momentum")
-    _render_sales_chart(time_series)
-    st.caption(trend_commentary)
+    sales_tab, insights_tab, assistant_tab = st.tabs(
+        ["Sales Momentum", "Insights", "Assistant"]
+    )
 
-    mix_section = st.container()
-    with mix_section:
+    with sales_tab:
+        _render_kpis(metrics)
+        st.markdown("### Sales Momentum")
+        _render_sales_chart(time_series)
+        st.caption(trend_commentary)
+        st.markdown("### Channel & Region Mix")
         _render_mix_section(channel, region)
 
-    left_col, right_col = st.columns([1, 1])
-    with left_col:
-        st.markdown("### Customer Segments")
+    with insights_tab:
+        forecast_col, narrative_col = st.columns(2)
+        with forecast_col:
+            st.markdown("### Forecast (Mock)")
+            st.metric(
+                f"Next Month Revenue ({forecast_dict['period']})",
+                f"${forecast_dict['forecast_revenue']:,.0f}",
+                delta=f"{forecast_dict['forecast_units']} units expected",
+            )
+            st.caption(
+                f"Illustrative range: ${forecast_dict['forecast_revenue_low']:,.0f} "
+                f"– ${forecast_dict['forecast_revenue_high']:,.0f} revenue."
+            )
+        with narrative_col:
+            st.markdown("### Narrative Summary")
+            st.write(narrative)
+
+        st.markdown("### Customer Segments (Mock)")
         if segments:
             seg_df = pd.DataFrame(segments)
             st.dataframe(seg_df, use_container_width=True, hide_index=True)
         else:
             st.info("Segments are mocked for this prototype and not available here.")
 
-        st.markdown("### Forecast")
-        st.metric(
-            f"Next Month Revenue ({forecast_dict['period']})",
-            f"${forecast_dict['forecast_revenue']:,.0f}",
-            delta=f"{forecast_dict['forecast_units']} units expected",
-        )
-        st.caption(
-            f"68% interval: ${forecast_dict['forecast_revenue_low']:,.0f} "
-            f"– ${forecast_dict['forecast_revenue_high']:,.0f} revenue."
-        )
-
-    with right_col:
-        st.markdown("### Narrative Summary")
-        st.write(narrative)
-
-        st.markdown("### Recommended Actions")
+        st.markdown("### Recommended Actions (Mock)")
         for card in recommended_cards:
             st.success(f"**{card['title']}** — {card['body']}")
 
-    st.markdown("### Ask ShopSight Assistant")
-    chat_state_key = f"chat_history_{product_id}"
-    if chat_state_key not in st.session_state:
-        st.session_state[chat_state_key] = []
-    chat_history = st.session_state[chat_state_key]
+    with assistant_tab:
+        chat_history = st.session_state[chat_state_key]
+        if len(chat_history) > CHAT_HISTORY_LIMIT * 2:
+            chat_history = chat_history[-CHAT_HISTORY_LIMIT * 2 :]
+            st.session_state[chat_state_key] = chat_history
+        for message in chat_history:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    for message in chat_history:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        user_prompt = st.chat_input("Ask anything about this product's performance")
+        if user_prompt:
+            st.session_state[chat_state_key].append(
+                {"role": "user", "content": user_prompt}
+            )
+            with st.chat_message("user"):
+                st.markdown(user_prompt)
 
-    user_prompt = st.chat_input("Ask anything about this product's performance")
-    if user_prompt:
-        st.session_state[chat_state_key].append({"role": "user", "content": user_prompt})
-        with st.chat_message("user"):
-            st.markdown(user_prompt)
-
-        assistant_reply = answer_question(
-            product["product_name"],
-            user_prompt,
-            metrics,
-            forecast_dict,
-            segments,
-            weekly_points,
-            channel,
-            region,
-        )
-        st.session_state[chat_state_key].append(
-            {"role": "assistant", "content": assistant_reply}
-        )
-        with st.chat_message("assistant"):
-            st.markdown(assistant_reply)
+            assistant_reply = answer_question(
+                product["product_name"],
+                user_prompt,
+                metrics,
+                forecast_dict,
+                segments,
+                weekly_points,
+                channel,
+                region,
+            )
+            st.session_state[chat_state_key].append(
+                {"role": "assistant", "content": assistant_reply}
+            )
+            # keep chat history manageable
+            if len(st.session_state[chat_state_key]) > CHAT_HISTORY_LIMIT * 2:
+                st.session_state[chat_state_key] = st.session_state[chat_state_key][
+                    -CHAT_HISTORY_LIMIT * 2 :
+                ]
+            with st.chat_message("assistant"):
+                st.markdown(assistant_reply)
 
 
 if __name__ == "__main__":
